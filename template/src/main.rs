@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use color_eyre::eyre::{eyre, Error, Result, Context};
+use color_eyre::eyre::{eyre, Context, ContextCompat, Error, Result};
 
 fn part1(input: &str) -> Result<usize> {
     Err(eyre!("todo"))
@@ -27,4 +27,3 @@ fn main() -> Result<()> {
 
     Ok(())
 }
-
