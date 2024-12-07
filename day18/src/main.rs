@@ -74,7 +74,7 @@ fn part2(input: &str) -> Result<usize> {
     for win in points.windows(2) {
         let [p0, p1] = win else { unreachable!() };
         sum = sum
-            .checked_add(((p0.y + p1.y) * (p0.x - p1.x)).into())
+            .checked_add((p0.y + p1.y) as i64 * (p0.x - p1.x) as i64)
             .unwrap()
     }
     let area = 0.5 * sum.abs() as f64;
