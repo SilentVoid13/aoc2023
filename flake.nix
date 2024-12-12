@@ -31,10 +31,16 @@
             default.rustfmt
           ];
 
-        shellPkgs = with pkgs; [toolchain];
+        shellPkgs = with pkgs; [
+          toolchain
+          z3
+          clang
+        ];
       in {
         devShell = pkgs.mkShell {
           packages = shellPkgs;
+          LIBCLANG_PATH = "${pkgs.llvmPackages_15.libclang.lib}/lib";
+          LD_LIBRARY_PATH = "${pkgs.z3.lib}/lib";
         };
       }
     );
