@@ -84,6 +84,72 @@ fn contract_edge(
     graph[v].clear();
 }
 
+fn stoer_wagner_min_cut(base_graph: &Graph) -> (usize, Vec<usize>) {
+    let mut graph = base_graph.clone();
+    let mut vertices: Vec<usize> = (0..graph.len()).collect();
+    let mut min_cut = usize::MAX;
+    let mut partitions: HashMap<usize, HashSet<usize>> = vertices
+        .iter()
+        .map(|&v| (v, vec![v].into_iter().collect()))
+        .collect();
+    let mut best_partition = None;
+
+    while vertices.len() > 1 {
+        let (s, t, cut_value) = minimum_cut_phase(&graph, &vertices, vertices[0]);
+        if cut_value < min_cut {
+            best_partition = Some(partitions[&t].clone());
+            min_cut = cut_value;
+        }
+        contract_edge(&mut graph, &mut vertices, &mut partitions, s, t)
+    }
+
+    let best_partition = best_partition.unwrap().into_iter().collect();
+    (min_cut, best_partition)
+}
+
+fn minimum_cut_phase(graph: &Graph, nodes: &[usize], start: usize) -> (usize, usize, usize) {
+    let n = graph.len();
+    let mut added = vec![false; n];
+    let mut weights = vec![0; n];
+    let mut added_vertices = Vec::new();
+
+    // we start with 'start'
+    added[start] = true;
+    added_vertices.push(start);
+    for &neighbor in &graph[start] {
+        weights[neighbor] += 1;
+    }
+
+    // search for vertices with maximum connectivity
+    while added_vertices.len() < nodes.len() {
+        let max_vertex = nodes
+            .iter()
+            .filter(|&&v| !added[v])
+            .max_by_key(|&&v| weights[v])
+            .copied()
+            .unwrap();
+        added[max_vertex] = true;
+        added_vertices.push(max_vertex);
+
+        // update weights for unvisited neighbors
+        // our graph is unweighted, so we just count the number of edges
+        for &neighbor in &graph[max_vertex] {
+            if !added[neighbor] {
+                weights[neighbor] += 1;
+            }
+        }
+    }
+
+    // Last two vertices represent the cut
+    let s = added_vertices[added_vertices.len() - 2];
+    let t = added_vertices[added_vertices.len() - 1];
+
+    // cut value is the weight of the last vertex
+    let cut_value = weights[t];
+
+    (s, t, cut_value)
+}
+
 fn part1(input: &str) -> Result<usize> {
     let graph = parse(input);
     for i in 0..1000 {
@@ -94,12 +160,15 @@ fn part1(input: &str) -> Result<usize> {
             return Ok(r);
         }
     }
-    Ok(0)
+    panic!("no min cut found");
 }
 
-fn part2(input: &str) -> Result<i64> {
-    let _input = parse(input);
-    Ok(0)
+fn part2(input: &str) -> Result<usize> {
+    let graph = parse(input);
+    let (min_cut, partition) = stoer_wagner_min_cut(&graph);
+    assert_eq!(min_cut, 3);
+    let r = partition.len() * (graph.len() - partition.len());
+    Ok(r)
 }
 
 fn main() -> Result<()> {
